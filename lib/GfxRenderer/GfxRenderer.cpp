@@ -4,24 +4,22 @@
 #include <miniz.h>
 
 namespace {
+tinfl_decompressor* inflator = nullptr;
+
 bool inflateOneShot(const uint8_t* inputBuf, const size_t deflatedSize, uint8_t* outputBuf, const size_t inflatedSize) {
-  // Setup inflator
-  const auto inflator = static_cast<tinfl_decompressor*>(malloc(sizeof(tinfl_decompressor)));
   if (!inflator) {
-    Serial.printf("[%lu] [ZIP] Failed to allocate memory for inflator\n", millis());
+    Serial.printf("[%lu] [GFX] Inflator not initialized\n", millis());
     return false;
   }
-  memset(inflator, 0, sizeof(tinfl_decompressor));
-  tinfl_init(inflator);
 
   size_t inBytes = deflatedSize;
   size_t outBytes = inflatedSize;
+  tinfl_init(inflator);
   const tinfl_status status = tinfl_decompress(inflator, inputBuf, &inBytes, nullptr, outputBuf, &outBytes,
                                                TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
-  free(inflator);
 
   if (status != TINFL_STATUS_DONE) {
-    Serial.printf("[%lu] [ZIP] tinfl_decompress() failed with status %d\n", millis(), status);
+    Serial.printf("[%lu] [GFX] tinfl_decompress() failed with status %d\n", millis(), status);
     return false;
   }
 
@@ -131,10 +129,21 @@ void GfxRenderer::drawText(const int fontId, const int x, const int y, const cha
     return;
   }
 
+  // Setup inflator
+  inflator = static_cast<tinfl_decompressor*>(malloc(sizeof(tinfl_decompressor)));
+  if (!inflator) {
+    Serial.printf("[%lu] [GFX] Failed to allocate memory for inflator\n", millis());
+    return;
+  }
+  memset(inflator, 0, sizeof(tinfl_decompressor));
+
   uint32_t cp;
   while ((cp = utf8NextCodepoint(reinterpret_cast<const uint8_t**>(&text)))) {
     renderChar(font, cp, &xpos, &yPos, black, style);
   }
+
+  free(inflator);
+  inflator = nullptr;
 }
 
 void GfxRenderer::drawLine(int x1, int y1, int x2, int y2, const bool state) const {
