@@ -138,6 +138,106 @@ void GfxRenderer::drawRect(const int x, const int y, const int width, const int 
   drawLine(x, y, x, y + height - 1, state);
 }
 
+void GfxRenderer::fillRoundedRect(int x, int y, int w, int h, int r, bool state) const {
+  // Safety check: ensure radius doesn't exceed dimensions
+  if (r > w / 2) r = w / 2;
+  if (r > h / 2) r = h / 2;
+
+  // 1. Fill the large center rectangular body (between the curved corners)
+  // This covers the full width of the rectangle, but leaves space at 
+  // the top and bottom for the rounded sections.
+  fillRect(x, y + r, w, h - 2 * r + 1, state);
+
+  // 2. Use Bresenham-style logic to fill the top and bottom curved sections
+  int cx = 0;
+  int cy = r;
+  int d = 3 - (2 * r);
+
+  // Variables to calculate the inner "straight" width between arcs
+  int inner_w = w - 2 * r;
+
+  while (cy >= cx) {
+    // Top section: Fill horizontal strips
+    // These strips bridge the gap between the left and right arcs
+    fillRect(x + r - cx, y + r - cy, inner_w + 2 * cx, 1, state);
+    fillRect(x + r - cy, y + r - cx, inner_w + 2 * cy, 1, state);
+
+    // Bottom section: Fill horizontal strips
+    fillRect(x + r - cy, y + h - r + cx, inner_w + 2 * cy, 1, state);
+    fillRect(x + r - cx, y + h - r + cy, inner_w + 2 * cx, 1, state);
+
+    if (d > 0) {
+      cy--;
+      d = d + 4 * (cx - cy) + 10;
+    } else {
+      d = d + 4 * cx + 6;
+    }
+    cx++;
+  }
+}
+
+void GfxRenderer::drawRoundedRect(int x, int y, int width, int height, const int radius, bool isSelected) const {
+    // Draw top and bottom horizontal lines with rounded ends
+    drawLine(x + radius, y, x + width - radius, y);
+    drawLine(x + radius, y + height, x + width - radius, y + height);
+
+    // Draw left and right vertical lines with rounded ends
+    drawLine(x, y + radius, x, y + height - radius);
+    drawLine(x + width, y + radius, x + width, y + height - radius);
+
+    drawRoundedCorners(x, y, width, height, radius);
+
+    if (isSelected) {
+        // Optionally add a border or other visual indication for selection
+        drawRect(x, y, width, height);
+    }
+}
+
+void GfxRenderer::drawRoundedCorners(int x, int y, int width, int height, int radius) const {
+    // Draw the 4 rounded corners using Bresenham logic
+    int cx = 0;
+    int cy = radius;
+    int d = 3 - (2 * radius);
+
+    plotBresenhamCorners(x, y, width, height, radius, cx, cy);
+
+    while (cy >= cx) {
+        cx++;
+        if (d > 0) {
+            cy--;
+            d = d + 4 * (cx - cy) + 10;
+        } else {
+            d = d + 4 * cx + 6;
+        }
+
+        plotBresenhamCorners(x, y, width, height, radius, cx, cy);
+    }
+}
+
+void GfxRenderer::plotBresenhamCorners(int xc, int yc, int w, int h, int r, int x, int y) const {
+    // Define the centers for the four corner arcs
+    int left   = xc + r;
+    int right  = xc + w - r;
+    int top    = yc + r;
+    int bottom = yc + h - r;
+
+    // Top-Right Corner (Octants 1 & 2)
+    drawPixel(right + x, top - y);
+    drawPixel(right + y, top - x);
+
+    // Top-Left Corner (Octants 3 & 4)
+    drawPixel(left - y, top - x);
+    drawPixel(left - x, top - y);
+
+    // Bottom-Left Corner (Octants 5 & 6)
+    drawPixel(left - x, bottom + y);
+    drawPixel(left - y, bottom + x);
+
+    // Bottom-Right Corner (Octants 7 & 8)
+    drawPixel(right + y, bottom + x);
+    drawPixel(right + x, bottom + y);
+}
+
 void GfxRenderer::fillRect(const int x, const int y, const int width, const int height, const bool state) const {
   for (int fillY = y; fillY < y + height; fillY++) {
     drawLine(x, fillY, x + width - 1, fillY, state);

@@ -216,6 +216,7 @@ void HomeActivity::render() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
+  constexpr int cornerRadius = 8;
   constexpr int margin = 20;
   constexpr int bottomMargin = 60;
 
@@ -265,7 +266,7 @@ void HomeActivity::render() {
           renderer.drawBitmap(bitmap, coverX, coverY, bookWidth, bookHeight);
 
           // Draw border around the card
-          renderer.drawRect(bookX, bookY, bookWidth, bookHeight);
+          renderer.drawRoundedRect(bookX, bookY, bookWidth, bookHeight, cornerRadius);
 
           // No bookmark ribbon when cover is shown - it would just cover the art
 
@@ -275,8 +276,8 @@ void HomeActivity::render() {
 
           // First render: if selected, draw selection indicators now
           if (bookSelected) {
-            renderer.drawRect(bookX + 1, bookY + 1, bookWidth - 2, bookHeight - 2);
-            renderer.drawRect(bookX + 2, bookY + 2, bookWidth - 4, bookHeight - 4);
+            renderer.drawRoundedRect(bookX + 1, bookY + 1, bookWidth - 2, bookHeight - 2, cornerRadius, true);
+            renderer.drawRoundedRect(bookX + 2, bookY + 2, bookWidth - 4, bookHeight - 4, cornerRadius, true);
           }
         }
         file.close();
@@ -284,9 +285,9 @@ void HomeActivity::render() {
     } else if (!bufferRestored && !coverRendered) {
       // No cover image: draw border or fill, plus bookmark as visual flair
       if (bookSelected) {
-        renderer.fillRect(bookX, bookY, bookWidth, bookHeight);
+        renderer.fillRoundedRect(bookX, bookY, bookWidth, bookHeight, cornerRadius);
       } else {
-        renderer.drawRect(bookX, bookY, bookWidth, bookHeight);
+        renderer.drawRoundedRect(bookX, bookY, bookWidth, bookHeight, cornerRadius);
       }
 
       // Draw bookmark ribbon when no cover image (visual decoration)
@@ -439,9 +440,9 @@ void HomeActivity::render() {
       const int boxY = titleYStart - boxPadding;
 
       // Draw white filled box
-      renderer.fillRect(boxX, boxY, boxWidth, boxHeight, false);
+      renderer.fillRoundedRect(boxX, boxY, boxWidth, boxHeight, cornerRadius, false);
       // Draw black border around the box
-      renderer.drawRect(boxX, boxY, boxWidth, boxHeight, true);
+      renderer.drawRoundedRect(boxX, boxY, boxWidth, boxHeight, cornerRadius, true);
     }
 
     for (const auto& line : lines) {
@@ -480,8 +481,8 @@ void HomeActivity::render() {
       const int continueBoxHeight = renderer.getLineHeight(UI_10_FONT_ID) + continuePadding;
       const int continueBoxX = (pageWidth - continueBoxWidth) / 2;
       const int continueBoxY = continueY - continuePadding / 2;
-      renderer.fillRect(continueBoxX, continueBoxY, continueBoxWidth, continueBoxHeight, false);
-      renderer.drawRect(continueBoxX, continueBoxY, continueBoxWidth, continueBoxHeight, true);
+      renderer.fillRoundedRect(continueBoxX, continueBoxY, continueBoxWidth, continueBoxHeight, cornerRadius, false);
+      renderer.drawRoundedRect(continueBoxX, continueBoxY, continueBoxWidth, continueBoxHeight, cornerRadius, true);
       renderer.drawCenteredText(UI_10_FONT_ID, continueY, continueText, true);
     } else {
       renderer.drawCenteredText(UI_10_FONT_ID, continueY, "Continue Reading", !bookSelected);
@@ -522,9 +523,9 @@ void HomeActivity::render() {
     const bool selected = selectorIndex == overallIndex;
 
     if (selected) {
-      renderer.fillRect(tileX, tileY, menuTileWidth, menuTileHeight);
+      renderer.fillRoundedRect(tileX, tileY, menuTileWidth, menuTileHeight, cornerRadius);
     } else {
-      renderer.drawRect(tileX, tileY, menuTileWidth, menuTileHeight);
+      renderer.drawRoundedRect(tileX, tileY, menuTileWidth, menuTileHeight, cornerRadius, false);
     }
 
     const char* label = menuItems[i];
