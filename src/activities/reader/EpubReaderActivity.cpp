@@ -52,17 +52,11 @@ void EpubReaderActivity::onEnter() {
   renderingMutex = xSemaphoreCreateMutex();
 
   epub->setupCacheDir();
+  epub->loadProgressFile();
 
-  FsFile f;
-  if (SdMan.openFileForRead("ERS", epub->getCachePath() + "/progress.bin", f)) {
-    uint8_t data[4];
-    if (f.read(data, 4) == 4) {
-      currentSpineIndex = data[0] + (data[1] << 8);
-      nextPageNumber = data[2] + (data[3] << 8);
-      Serial.printf("[%lu] [ERS] Loaded cache: %d, %d\n", millis(), currentSpineIndex, nextPageNumber);
-    }
-    f.close();
-  }
+  currentSpineIndex = epub->getCurrentSpineIndex();
+  nextPageNumber = epub->getNextPageNumber();
+
   // We may want a better condition to detect if we are opening for the first time.
   // This will trigger if the book is re-opened at Chapter 0.
   if (currentSpineIndex == 0) {
@@ -360,16 +354,10 @@ void EpubReaderActivity::renderScreen() {
     Serial.printf("[%lu] [ERS] Rendered page in %dms\n", millis(), millis() - start);
   }
 
-  FsFile f;
-  if (SdMan.openFileForWrite("ERS", epub->getCachePath() + "/progress.bin", f)) {
-    uint8_t data[4];
-    data[0] = currentSpineIndex & 0xFF;
-    data[1] = (currentSpineIndex >> 8) & 0xFF;
-    data[2] = section->currentPage & 0xFF;
-    data[3] = (section->currentPage >> 8) & 0xFF;
-    f.write(data, 4);
-    f.close();
-  }
+  const float sectionChapterProg = static_cast<float>(section->currentPage) / section->pageCount;
+  const uint8_t bookProgress = epub->calculateProgress(currentSpineIndex, sectionChapterProg);
+
+  epub->writeProgressFile(currentSpineIndex, section->currentPage, bookProgress);
 }
 
 void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int orientedMarginTop,

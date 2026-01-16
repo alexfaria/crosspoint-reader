@@ -52,6 +52,8 @@ void HomeActivity::onEnter() {
     if (StringUtils::checkFileExtension(lastBookTitle, ".epub")) {
       Epub epub(APP_STATE.openEpubPath, "/.crosspoint");
       epub.load(false);
+      epub.loadProgressFile();
+      continueReadingProgress = epub.getCurrentProgress();
       if (!epub.getTitle().empty()) {
         lastBookTitle = std::string(epub.getTitle());
       }
@@ -474,7 +476,7 @@ void HomeActivity::render() {
     const int continueY = bookY + bookHeight - renderer.getLineHeight(UI_10_FONT_ID) * 3 / 2;
     if (coverRendered) {
       // Draw white box behind "Continue Reading" text
-      const char* continueText = "Continue Reading";
+      const char* continueText = getContinueReadingText().c_str();
       const int continueTextWidth = renderer.getTextWidth(UI_10_FONT_ID, continueText);
       constexpr int continuePadding = 6;
       const int continueBoxWidth = continueTextWidth + continuePadding * 2;
@@ -485,7 +487,7 @@ void HomeActivity::render() {
       renderer.drawRoundedRect(continueBoxX, continueBoxY, continueBoxWidth, continueBoxHeight, cornerRadius, true);
       renderer.drawCenteredText(UI_10_FONT_ID, continueY, continueText, true);
     } else {
-      renderer.drawCenteredText(UI_10_FONT_ID, continueY, "Continue Reading", !bookSelected);
+      renderer.drawCenteredText(UI_10_FONT_ID, continueY, getContinueReadingText().c_str(), !bookSelected);
     }
   } else {
     // No book to continue reading
@@ -550,4 +552,13 @@ void HomeActivity::render() {
   ScreenComponents::drawBattery(renderer, batteryX, 10, showBatteryPercentage);
 
   renderer.displayBuffer();
+}
+
+std::string HomeActivity::getContinueReadingText() const {
+
+  if (continueReadingProgress <= 0) {
+    return "Continue Reading";
+  }
+
+  return "Continue Reading " + std::to_string(continueReadingProgress) + "%";
 }

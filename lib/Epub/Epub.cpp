@@ -573,6 +573,12 @@ int Epub::getSpineIndexForTocIndex(const int tocIndex) const {
 
 int Epub::getTocIndexForSpineIndex(const int spineIndex) const { return getSpineItem(spineIndex).tocIndex; }
 
+int Epub::getCurrentSpineIndex() const { return currentSpineIndex; }
+
+int Epub::getNextPageNumber() const { return nextPageNumber; }
+
+int Epub::getCurrentProgress() const { return currentProgress; }
+
 size_t Epub::getBookSize() const {
   if (!bookMetadataCache || !bookMetadataCache->isLoaded() || bookMetadataCache->getSpineCount() == 0) {
     return 0;
@@ -619,4 +625,40 @@ uint8_t Epub::calculateProgress(const int currentSpineIndex, const float current
   const size_t curChapterSize = getCumulativeSpineItemSize(currentSpineIndex) - prevChapterSize;
   const size_t sectionProgSize = currentSpineRead * curChapterSize;
   return round(static_cast<float>(prevChapterSize + sectionProgSize) / bookSize * 100.0);
+}
+
+void Epub::loadProgressFile() {
+  FsFile f;
+  if (SdMan.openFileForRead("EBP", getCachePath() + "/progress.bin", f)) {
+    uint8_t data[5];
+    int bytesRead = f.read(data, 5);
+
+    // At least 4 bytes are needed for spine index and page number
+    if (bytesRead >= 4) {
+      currentSpineIndex = data[0] + (data[1] << 8);
+      nextPageNumber = data[2] + (data[3] << 8);
+
+      // 5th byte is optional (backwards compatability - so we don't reset progress when updating to a newer version)
+      if (bytesRead >= 5) {
+        currentProgress = data[4];  // just one byte for 0-100%
+      }
+
+      Serial.printf("[%lu] [EBP] Loaded cache: %d, %d, %d\n", millis(), currentSpineIndex, nextPageNumber, currentProgress);
+    }
+    f.close();
+  }
+}
+
+void Epub::writeProgressFile(const int currentSpineIndex, const int sectionCurrentPage, const uint8_t currentProgress) {
+  FsFile f;
+  if (SdMan.openFileForWrite("EBP", getCachePath() + "/progress.bin", f)) {
+    uint8_t data[5];
+    data[0] = currentSpineIndex & 0xFF;
+    data[1] = (currentSpineIndex >> 8) & 0xFF;
+    data[2] = sectionCurrentPage & 0xFF;
+    data[3] = (sectionCurrentPage >> 8) & 0xFF;
+    data[4] = currentProgress;   // just one byte for 0-100%
+    f.write(data, 5);
+    f.close();
+  }
 }

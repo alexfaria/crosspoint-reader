@@ -11,6 +11,7 @@ class HomeActivity final : public Activity {
   TaskHandle_t displayTaskHandle = nullptr;
   SemaphoreHandle_t renderingMutex = nullptr;
   int selectorIndex = 0;
+  int continueReadingProgress = 0;
   bool updateRequired = false;
   bool hasContinueReading = false;
   bool hasOpdsUrl = false;
@@ -34,6 +35,7 @@ class HomeActivity final : public Activity {
   bool storeCoverBuffer();    // Store frame buffer for cover image
   bool restoreCoverBuffer();  // Restore frame buffer from stored cover
   void freeCoverBuffer();     // Free the stored cover buffer
+  std::string getContinueReadingText() const;
 
  public:
   explicit HomeActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,

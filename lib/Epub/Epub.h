@@ -30,6 +30,10 @@ class Epub {
   bool parseTocNcxFile() const;
   bool parseTocNavFile() const;
 
+  int currentSpineIndex = 0;
+  int nextPageNumber = 0;
+  int currentProgress = 0;  // 0-100
+
  public:
   explicit Epub(std::string filepath, const std::string& cacheDir) : filepath(std::move(filepath)) {
     // create a cache key based on the filepath
@@ -61,6 +65,12 @@ class Epub {
   size_t getCumulativeSpineItemSize(int spineIndex) const;
   int getSpineIndexForTextReference() const;
 
+  int getCurrentSpineIndex() const;
+  int getNextPageNumber() const;
+  int getCurrentProgress() const;
+
   size_t getBookSize() const;
   uint8_t calculateProgress(int currentSpineIndex, float currentSpineRead) const;
+  void loadProgressFile();
+  void writeProgressFile(const int currentSpineIndex, const int sectionCurrentPage, const uint8_t currentProgress);
 };
