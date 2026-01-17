@@ -402,17 +402,21 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
 void EpubReaderActivity::renderStatusBar(const int orientedMarginRight, const int orientedMarginBottom,
                                          const int orientedMarginLeft) const {
   // determine visible status bar elements
-  const bool showProgress = SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL;
+  const bool showProgressPercentage = SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL;
+  const bool showProgressBar = SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL_WITH_PROGRESS_BAR;
+  const bool showProgress = showProgressPercentage || showProgressBar;
   const bool showBattery = SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::NO_PROGRESS ||
-                           SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL;
+                           SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL ||
+                           SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL_WITH_PROGRESS_BAR;
   const bool showChapterTitle = SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::NO_PROGRESS ||
-                                SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL;
+                                SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL || 
+                                SETTINGS.statusBar == CrossPointSettings::STATUS_BAR_MODE::FULL_WITH_PROGRESS_BAR;
   const bool showBatteryPercentage =
       SETTINGS.hideBatteryPercentage == CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_NEVER;
 
   // Position status bar near the bottom of the logical screen, regardless of orientation
   const auto screenHeight = renderer.getScreenHeight();
-  const auto textY = screenHeight - orientedMarginBottom - 4;
+  const auto textY = screenHeight - orientedMarginBottom - 4 - (showProgressBar ? 10 : 0); // extra space for progress bar
   int progressTextWidth = 0;
 
   if (showProgress) {
@@ -421,11 +425,27 @@ void EpubReaderActivity::renderStatusBar(const int orientedMarginRight, const in
     const uint8_t bookProgress = epub->calculateProgress(currentSpineIndex, sectionChapterProg);
 
     // Right aligned text for progress counter
-    const std::string progress = std::to_string(section->currentPage + 1) + "/" + std::to_string(section->pageCount) +
-                                 "  " + std::to_string(bookProgress) + "%";
+    std::string progress = std::to_string(section->currentPage + 1) + "/" + std::to_string(section->pageCount);
+
+    if (showProgressPercentage) {
+        progress += "  " + std::to_string(bookProgress) + "%";
+    }
+
     progressTextWidth = renderer.getTextWidth(SMALL_FONT_ID, progress.c_str());
     renderer.drawText(SMALL_FONT_ID, renderer.getScreenWidth() - orientedMarginRight - progressTextWidth, textY,
                       progress.c_str());
+
+    if (showProgressBar) {
+      // Draw progress bar under text
+      const int barWidth = renderer.getScreenWidth() - orientedMarginRight - orientedMarginLeft;
+      const int barHeight = 2;
+      const int barX = orientedMarginLeft;
+      const int barY = screenHeight - orientedMarginBottom + (statusBarMargin / 2) + 4;
+      // renderer.drawRect(barX, barY, barWidth, barHeight);
+      renderer.fillRect(barX, barY, barWidth, barHeight);
+      const int fillWidth = (barWidth - 2) * bookProgress / 100;
+      renderer.fillRect(barX - 1, barY - 1, fillWidth, barHeight + 2, true);
+    }
   }
 
   if (showBattery) {
