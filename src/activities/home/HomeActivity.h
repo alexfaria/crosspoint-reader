@@ -12,6 +12,8 @@ class HomeActivity final : public Activity {
   SemaphoreHandle_t renderingMutex = nullptr;
   int selectorIndex = 0;
   int continueReadingProgress = 0;
+  int currentBookPosition = 0;
+  int bookSize = 0;
   bool updateRequired = false;
   bool hasContinueReading = false;
   bool hasOpdsUrl = false;
