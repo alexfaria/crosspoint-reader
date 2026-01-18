@@ -176,7 +176,7 @@ void GfxRenderer::fillRoundedRect(int x, int y, int w, int h, int r, bool state)
   }
 }
 
-void GfxRenderer::drawRoundedRect(int x, int y, int width, int height, const int radius, bool isSelected) const {
+void GfxRenderer::drawRoundedRect(int x, int y, int width, int height, const int radius) const {
     // Draw top and bottom horizontal lines with rounded ends
     drawLine(x + radius, y, x + width - radius, y);
     drawLine(x + radius, y + height, x + width - radius, y + height);
@@ -186,11 +186,6 @@ void GfxRenderer::drawRoundedRect(int x, int y, int width, int height, const int
     drawLine(x + width, y + radius, x + width, y + height - radius);
 
     drawRoundedCorners(x, y, width, height, radius);
-
-    if (isSelected) {
-        // Optionally add a border or other visual indication for selection
-        drawRect(x, y, width, height);
-    }
 }
 
 void GfxRenderer::drawRoundedCorners(int x, int y, int width, int height, int radius) const {
@@ -584,8 +579,6 @@ void GfxRenderer::drawButtonHints(const int fontId, const char* btn1, const char
     // Only draw if the label is non-empty
     if (labels[i] != nullptr && labels[i][0] != '\0') {
       const int x = buttonPositions[i];
-      fillRect(x, pageHeight - buttonY, buttonWidth, buttonHeight, false);
-      drawRect(x, pageHeight - buttonY, buttonWidth, buttonHeight);
       const int textWidth = getTextWidth(fontId, labels[i]);
       const int textX = x + (buttonWidth - 1 - textWidth) / 2;
       drawText(fontId, textX, pageHeight - buttonY + textYOffset, labels[i]);

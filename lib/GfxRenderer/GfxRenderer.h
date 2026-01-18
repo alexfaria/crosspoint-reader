@@ -64,9 +64,7 @@ class GfxRenderer {
   void drawPixel(int x, int y, bool state = true) const;
   void drawLine(int x1, int y1, int x2, int y2, bool state = true) const;
   void drawRect(int x, int y, int width, int height, bool state = true) const;
-  void drawRoundedRect(int x, int y, int width, int height, int radius, bool isSelected = false) const;
-  void drawRoundedCorners(int x, int y, int width, int height, int radius) const;
-  void plotBresenhamCorners(int xc, int yc, int w, int h, int r, int x, int y) const;
+  void drawRoundedRect(int x, int y, int width, int height, int radius) const;
   void fillRect(int x, int y, int width, int height, bool state = true) const;
   void fillRoundedRect(int x, int y, int width, int height, int radius, bool state = true) const;
   void drawImage(const uint8_t bitmap[], int x, int y, int width, int height) const;
@@ -96,6 +94,9 @@ class GfxRenderer {
   void drawTextRotated90CW(int fontId, int x, int y, const char* text, bool black = true,
                            EpdFontFamily::Style style = EpdFontFamily::REGULAR) const;
   int getTextHeight(int fontId) const;
+  // Helpers for rounded corners
+  void drawRoundedCorners(int x, int y, int width, int height, int radius) const;
+  void plotBresenhamCorners(int xc, int yc, int w, int h, int r, int x, int y) const;
 
  public:
   // Grayscale functions
