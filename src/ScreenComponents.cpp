@@ -42,6 +42,17 @@ void ScreenComponents::drawBattery(const GfxRenderer& renderer, const int left, 
   renderer.fillRect(x + 2, y + 2, filledWidth, batteryHeight - 4);
 }
 
+void ScreenComponents::drawBookProgressBar(const GfxRenderer& renderer, const size_t bookProgress) {
+  int vieweableMarginTop, vieweableMarginRight, vieweableMarginBottom, vieweableMarginLeft;
+  renderer.getOrientedViewableTRBL(&vieweableMarginTop, &vieweableMarginRight, &vieweableMarginBottom,
+                                   &vieweableMarginLeft);
+
+  const int progressBarMaxWidth = renderer.getScreenWidth() - vieweableMarginLeft - vieweableMarginRight;
+  const int progressBarY = renderer.getScreenHeight() - vieweableMarginBottom - BOOK_PROGRESS_BAR_HEIGHT;
+  const int barWidth = progressBarMaxWidth * bookProgress / 100;
+  renderer.fillRect(vieweableMarginLeft, progressBarY, barWidth, BOOK_PROGRESS_BAR_HEIGHT, true);
+}
+
 void ScreenComponents::drawProgressBar(const GfxRenderer& renderer, const int x, const int y, const int width,
                                        const int height, const size_t current, const size_t total) {
   if (total == 0) {

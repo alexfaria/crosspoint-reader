@@ -17,7 +17,6 @@ namespace {
 constexpr unsigned long skipChapterMs = 700;
 constexpr unsigned long goHomeMs = 1000;
 constexpr int statusBarMargin = 19;
-constexpr int progressBarHeight = 4;
 constexpr int progressBarMarginTop = 1;
 
 }  // namespace
@@ -264,9 +263,6 @@ void EpubReaderActivity::renderScreen() {
     return;
   }
 
-  // Add additional margin for status bar if progress bar is shown
-  const bool showProgressBar = SETTINGS.statusBar == CrossPointSettings::FULL_WITH_PROGRESS_BAR;
-
   // Apply screen viewable areas and additional padding
   int orientedMarginTop, orientedMarginRight, orientedMarginBottom, orientedMarginLeft;
   renderer.getOrientedViewableTRBL(&orientedMarginTop, &orientedMarginRight, &orientedMarginBottom,
@@ -274,7 +270,15 @@ void EpubReaderActivity::renderScreen() {
   orientedMarginTop += SETTINGS.screenMargin;
   orientedMarginLeft += SETTINGS.screenMargin;
   orientedMarginRight += SETTINGS.screenMargin;
-  orientedMarginBottom += statusBarMargin + (showProgressBar ? (progressBarHeight + progressBarMarginTop) : 0);
+  orientedMarginBottom += SETTINGS.screenMargin;
+
+  // Add status bar margin
+  if (SETTINGS.statusBar != CrossPointSettings::STATUS_BAR_MODE::NONE) {
+    // Add additional margin for status bar if progress bar is shown
+    const bool showProgressBar = SETTINGS.statusBar == CrossPointSettings::FULL_WITH_PROGRESS_BAR;
+    orientedMarginBottom += statusBarMargin - SETTINGS.screenMargin +
+                            (showProgressBar ? (ScreenComponents::BOOK_PROGRESS_BAR_HEIGHT + progressBarMarginTop) : 0);
+  }
 
   if (!section) {
     const auto filepath = epub->getSpineItem(currentSpineIndex).href;
@@ -470,14 +474,7 @@ void EpubReaderActivity::renderStatusBar(const int orientedMarginRight, const in
 
     if (showProgressBar) {
       // Draw progress bar at the very bottom of the screen, from edge to edge of viewable area
-      int vieweableMarginTop, vieweableMarginRight, vieweableMarginBottom, vieweableMarginLeft;
-      renderer.getOrientedViewableTRBL(&vieweableMarginTop, &vieweableMarginRight, &vieweableMarginBottom,
-                                       &vieweableMarginLeft);
-
-      const int progressBarMaxWidth = renderer.getScreenWidth() - vieweableMarginLeft - vieweableMarginRight;
-      const int progressBarY = renderer.getScreenHeight() - vieweableMarginBottom - progressBarHeight;
-      const int barWidth = progressBarMaxWidth * bookProgress / 100;
-      renderer.fillRect(vieweableMarginLeft, progressBarY, barWidth, progressBarHeight, true);
+      ScreenComponents::drawBookProgressBar(renderer, static_cast<size_t>(bookProgress));
     }
   }
 

@@ -14,7 +14,6 @@
 namespace {
 constexpr unsigned long goHomeMs = 1000;
 constexpr int statusBarMargin = 25;
-constexpr int progressBarHeight = 4;
 constexpr int progressBarMarginTop = 1;
 constexpr size_t CHUNK_SIZE = 8 * 1024;  // 8KB chunk for reading
 
@@ -151,9 +150,6 @@ void TxtReaderActivity::initializeReader() {
   cachedScreenMargin = SETTINGS.screenMargin;
   cachedParagraphAlignment = SETTINGS.paragraphAlignment;
 
-  // Add additional margin for status bar if progress bar is shown
-  const bool showProgressBar = SETTINGS.statusBar == CrossPointSettings::FULL_WITH_PROGRESS_BAR;
-
   // Calculate viewport dimensions
   int orientedMarginTop, orientedMarginRight, orientedMarginBottom, orientedMarginLeft;
   renderer.getOrientedViewableTRBL(&orientedMarginTop, &orientedMarginRight, &orientedMarginBottom,
@@ -161,7 +157,15 @@ void TxtReaderActivity::initializeReader() {
   orientedMarginTop += cachedScreenMargin;
   orientedMarginLeft += cachedScreenMargin;
   orientedMarginRight += cachedScreenMargin;
-  orientedMarginBottom += statusBarMargin + (showProgressBar ? (progressBarHeight + progressBarMarginTop) : 0);
+  orientedMarginBottom += cachedScreenMargin;
+
+  // Add status bar margin
+  if (SETTINGS.statusBar != CrossPointSettings::STATUS_BAR_MODE::NONE) {
+    // Add additional margin for status bar if progress bar is shown
+    const bool showProgressBar = SETTINGS.statusBar == CrossPointSettings::FULL_WITH_PROGRESS_BAR;
+    orientedMarginBottom += statusBarMargin - cachedScreenMargin +
+                            (showProgressBar ? (ScreenComponents::BOOK_PROGRESS_BAR_HEIGHT + progressBarMarginTop) : 0);
+  }
 
   viewportWidth = renderer.getScreenWidth() - orientedMarginLeft - orientedMarginRight;
   const int viewportHeight = renderer.getScreenHeight() - orientedMarginTop - orientedMarginBottom;
@@ -531,14 +535,7 @@ void TxtReaderActivity::renderStatusBar(const int orientedMarginRight, const int
 
     if (showProgressBar) {
       // Draw progress bar at the very bottom of the screen, from edge to edge of viewable area
-      int vieweableMarginTop, vieweableMarginRight, vieweableMarginBottom, vieweableMarginLeft;
-      renderer.getOrientedViewableTRBL(&vieweableMarginTop, &vieweableMarginRight, &vieweableMarginBottom,
-                                       &vieweableMarginLeft);
-
-      const int progressBarMaxWidth = renderer.getScreenWidth() - vieweableMarginLeft - vieweableMarginRight;
-      const int progressBarY = renderer.getScreenHeight() - vieweableMarginBottom - progressBarHeight;
-      const int barWidth = progressBarMaxWidth * progress / 100;
-      renderer.fillRect(vieweableMarginLeft, progressBarY, barWidth, progressBarHeight, true);
+      ScreenComponents::drawBookProgressBar(renderer, static_cast<size_t>(progress));
     }
   }
 
