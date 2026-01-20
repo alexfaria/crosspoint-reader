@@ -457,7 +457,7 @@ void EpubReaderActivity::renderStatusBar(const int orientedMarginRight, const in
     char progressStr[32];
 
     // Hide percentage when progress bar is shown to reduce clutter
-    if(showProgressPercentage) {
+    if (showProgressPercentage) {
       snprintf(progressStr, sizeof(progressStr), "%d/%d  %.1f%%", section->currentPage + 1, section->pageCount,
                bookProgress);
     } else {
@@ -473,7 +473,7 @@ void EpubReaderActivity::renderStatusBar(const int orientedMarginRight, const in
       int vieweableMarginTop, vieweableMarginRight, vieweableMarginBottom, vieweableMarginLeft;
       renderer.getOrientedViewableTRBL(&vieweableMarginTop, &vieweableMarginRight, &vieweableMarginBottom,
                                        &vieweableMarginLeft);
-  
+
       const int progressBarMaxWidth = renderer.getScreenWidth() - vieweableMarginLeft - vieweableMarginRight;
       const int progressBarY = renderer.getScreenHeight() - vieweableMarginBottom - progressBarHeight;
       const int barWidth = progressBarMaxWidth * bookProgress / 100;
