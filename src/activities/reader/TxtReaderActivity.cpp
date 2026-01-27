@@ -8,6 +8,7 @@
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
 #include "MappedInputManager.h"
+#include "RecentBooksStore.h"
 #include "ScreenComponents.h"
 #include "fontIds.h"
 
@@ -56,9 +57,10 @@ void TxtReaderActivity::onEnter() {
 
   txt->setupCacheDir();
 
-  // Save current txt as last opened file
+  // Save current txt as last opened file and add to recent books
   APP_STATE.openEpubPath = txt->getPath();
   APP_STATE.saveToFile();
+  RECENT_BOOKS.addBook(txt->getPath());
 
   // Trigger first update
   updateRequired = true;
@@ -530,7 +532,7 @@ void TxtReaderActivity::renderStatusBar(const int orientedMarginRight, const int
   if (showProgressText || showProgressPercentage) {
     char progressStr[32];
     if (showProgressPercentage) {
-      snprintf(progressStr, sizeof(progressStr), "%d/%d %.1f%%", currentPage + 1, totalPages, progress);
+      snprintf(progressStr, sizeof(progressStr), "%d/%d %.0f%%", currentPage + 1, totalPages, progress);
     } else {
       snprintf(progressStr, sizeof(progressStr), "%d/%d", currentPage + 1, totalPages);
     }
